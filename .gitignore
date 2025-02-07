@@ -1,0 +1,59 @@
+# Visual Studio specific
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+out/
+*.dll
+*.exe
+*.log
+*.cache
+*.pdb
+
+# User-specific files
+*.rsuser
+*.sln*
+*.vcxproj*
+*.vcxproj.filters*
+
+# ASP.NET-specific
+appsettings.json
+appsettings.*.json
+secrets.json
+
+# Entity Framework Migrations
+Migrations/
+
+# Rider-specific
+.idea/
+*.iml
+
+# Logs and Debugging
+logs/
+*.log
+*.ncrunch*
+TestResults/
+coverage/
+*.coverage
+*.vspx
+*.swo
+*.swn
+
+# npm package dependencies (if using frontend with .NET)
+node_modules/
+
+# Environment and Deployment
+.env
+*.pubxml
+*.publishsettings
+
+# Resharper files
+*.DotSettings.user
+
+# Docker
+docker-compose.override.yml
