@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProductAPI.Controllers
 {
@@ -6,63 +9,57 @@ namespace ProductAPI.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private static readonly List<Product> Products =
-        [
-            new Product { Id = 1, Name = "Laptop", Price = 1200.99M },
-            new Product { Id = 2, Name = "Smartphone", Price = 799.49M }
-        ];
+        private readonly ProductService _productService;
+        private readonly ILogger<ProductsController> _logger;
 
-        [HttpGet]
-        public ActionResult<IEnumerable<Product>> GetProducts()
+        public ProductsController(ProductService productService, ILogger<ProductsController> logger)
         {
-            return Ok(Products);
+            _productService = productService;
+            _logger = logger;
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<Product> GetProduct(int id)
+        [HttpGet]
+        public IActionResult Get()
         {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
-                return NotFound();
-            return Ok(product);
+            _logger.LogInformation("Fetching all products");
+            return Ok(_productService.GetAllProducts());
         }
 
         [HttpPost]
-        public ActionResult<Product> AddProduct(Product product)
+        public IActionResult Post([FromBody] Product product)
         {
-            product.Id = Products.Max(p => p.Id) + 1;
-            Products.Add(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateProduct(int id, Product updatedProduct)
-        {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
-                return NotFound();
-
-            product.Name = updatedProduct.Name;
-            product.Price = updatedProduct.Price;
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteProduct(int id)
-        {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-            if (product == null)
-                return NotFound();
-
-            Products.Remove(product);
-            return NoContent();
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid product data received");
+                return BadRequest(ModelState);
+            }
+            _productService.AddProduct(product);
+            _logger.LogInformation("Product added: {ProductName}", product.Name);
+            return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
         }
     }
 
     public class Product
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Product name is required")]
+        public string Name { get; set; }
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero")]
         public decimal Price { get; set; }
+    }
+
+    public class ProductService
+    {
+        private readonly List<Product> _products = new();
+
+        public List<Product> GetAllProducts() => _products;
+
+        public void AddProduct(Product product)
+        {
+            product.Id = _products.Count + 1;
+            _products.Add(product);
+        }
     }
 }
